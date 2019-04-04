@@ -24,6 +24,12 @@ enum HTTP_CODE
 	UNKNOWN,
 	PARTIAL_OK
 };
+enum STATUS
+{
+	HTTP=0,
+	HTTPS, 
+	HOST_WRONG
+};
 
 struct file_imformation{
     char *absolute_path;//文件的绝对路径
@@ -44,6 +50,43 @@ struct thread_package{
     int write_ret;//写入字节数目
 };
 
+/* 客户端定义 */
+class client{
+private:
+    int socket;//套接字
+    int port;//端口号
+    int thread_number;//开辟的线程数量
+    char *address_buf;//存储URL地址
+	char *address;
+    char *fqdn;//FQDN解析
+    char http_request[1000];//http请求头填写
+    char http_respond[1000];//http响应头接收
+    struct sockaddr_in server;//服务器套接字地址
+    struct hostent *host;//通过解析下载地址，获取IP地址
+    struct thread_package Thread_package;//线程包
+    struct file_imformation myfile_information;//文件信息
+    STATUS status;
+public:
+    client(int thread_num, char *addr) : thread_number(thread_num), address_buf(addr){
+        socket = -1;
+        port = 80;//默认端口为80
+        fqdn = NULL;
+        status = HTTP;
+        memset(http_request, 0, 1000);
+        bzero(&server,sizeof(server));
+        bzero(&Thread_package,sizeof(Thread_package));
+        bzero(&host,sizeof(host));
+        bzero(&myfile_information,sizeof(myfile_information));
+    }
+    
+    ~client();
+    STATUS process_address();//解析下载地址
+    void parse_httphead();//解析HTTP响应头
+    void thread_download();//多线程下载
+    void mysocket();
+private:
+    static void *work(void *arg);
+};
 
 
 

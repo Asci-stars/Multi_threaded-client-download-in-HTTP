@@ -24,7 +24,8 @@ int input_inform()
 	fil = new char[file_name.size()];
 	file_name.copy(fil,file_name.size(),0);
 	cout<<"下载的文件名："<<fil<<endl;
-	
+	client my_client(thread_num,addr);
+	my_client.mysocket();
 	
 	return 0;
 }
