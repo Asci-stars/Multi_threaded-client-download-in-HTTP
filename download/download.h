@@ -81,7 +81,7 @@ public:
     
     ~client();
     STATUS process_address();//解析下载地址
-    void parse_httphead();//解析HTTP响应头
+    void process_httphead();//解析HTTP响应头
     void thread_download();//多线程下载
     void mysocket();
 private:
