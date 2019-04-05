@@ -322,9 +322,39 @@ void client::thread_download()
         pthread_create(&Thread_package[i].pid, NULL, work, &Thread_package[i]);
         pthread_detach(Thread_package[i].pid);
     }	
-	
-	
-	
+	cout<<"打印进度条："<<endl;
+	long int count = 0;
+	while(1)
+	{	
+		count = 0;
+		for(int i = 0;i < thread_number;i++)
+		{
+			count += Thread_package[i].write_ret;
+		}
+		double percent = (double)count / (double)myfile_information.file_length;
+		while(percent < 1)
+		{
+			printf("%-10d%\r",percent*100);
+		}
+        if(count == myfile_information.file_length)
+        {
+            cout << "\n下载结束\n";
+            break;
+        }
+	}
+    if(count != myfile_information.file_length)
+    {
+        int r = remove(myfile_information.file_name_td);
+        if(r == 0)
+        {
+            cout << "下载失败!\n";
+        }
+        exit(0);
+    }
+    else{
+        rename(myfile_information.file_name_td, myfile_information.file_name);
+        cout << "下载成功!\n";
+    }	
 }
 
 
