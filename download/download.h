@@ -53,7 +53,7 @@ struct thread_package{
 /* 客户端定义 */
 class client{
 private:
-    int socket;//套接字
+    int socket_fd;//套接字
     int port;//端口号
     int thread_number;//开辟的线程数量
     char *address_buf;//存储URL地址
@@ -68,7 +68,7 @@ private:
     STATUS status;
 public:
     client(int thread_num, char *addr) : thread_number(thread_num), address_buf(addr){
-        socket = -1;
+        socket_fd = -1;
         port = 80;//默认端口为80
         fqdn = NULL;
         status = HTTP;

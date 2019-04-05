@@ -2,7 +2,7 @@
 
 client::~client()
 {
-	close(socket);
+	close(socket_fd);
 	delete []address;
 }
 
@@ -18,6 +18,21 @@ void client::mysocket()
 	my_status = process_address();
 	cout<<"my_status : "<<my_status<<endl;
 	
+	server.sin_family = AF_INET;
+	server.sin_port   = htons(port);
+	server.sin_addr.s_addr = *(int *)host->h_addr_list[0];
+	
+	socket_fd = socket(AF_INET,SOCK_STREAM,0);
+	assert(socket >= 0);
+	/*创建连接*/
+	int connects = connect(socket_fd,(struct sockaddr*)&server,sizeof(server));
+	if(connects >= 0)
+	{
+		cout<<"创建连接成功 :"<<connects<<endl;
+	}else
+	{
+		cout<<"创建连接失败 : "<<connects<<endl;
+	}
 	
 }
 
