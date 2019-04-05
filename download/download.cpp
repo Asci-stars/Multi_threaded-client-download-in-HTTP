@@ -222,7 +222,7 @@ void* client::work(void *arg)
 	/*设置套接字*/
 	struct sockaddr_in client;
 	struct hostent *thread_host;
-	hostent = gethostbyname(my->fqdn);
+	thread_host = gethostbyname(my->fqdn);
 	client.sin_family = AF_INET;
 	client.sin_port = htons(80);
 	client.sin_addr.s_addr = *(int*)thread_host->h_addr_list[0];
@@ -239,25 +239,27 @@ void* client::work(void *arg)
 	cout<<"线程HTTP请求报文："<<endl<<http_head_get;
 	
 	int sends = write(my->sockfd,http_head_get,sizeof(http_head_get));
+	assert(sends>0);
+    cout << "发送HTTP请求成功\n";
 	char ch[1];
 	char buf[2000];
 	int k = 0;
 	while(read(my->sockfd , ch, 1) != 0)
 	{
-		buf[k++] = ch[0];
-		while(k > 4 && buf[k] == '\n' && buf[k-1] == '\r' && buf[k-2] == '\n' && buf[k-3] == '\r')
+		buf[k] = ch[0];
+		if(k > 4 && buf[k] == '\n' && buf[k-1] == '\r' && buf[k-2] == '\n' && buf[k-3] == '\r')
 		{
 			break;
 		}
+		k++;
 	}
-	buf[k] = '\0';
+	buf[k+1] = '\0';
 	cout<<"线程响应报文："<<buf<<endl;
 	HTTP_CODE code = process_httpcode(buf);
 	process_status_code(code);
-	
 	int len = (my->end) - (my->start);
 	buffer = new char[len];
-	int fd = open(my->file_name_temp, O_CREAT | O_WRONLY, S_IRWXG | S_IRWXO | S_IRWXU);
+	int fd = open(my->file_name, O_CREAT | O_WRONLY, S_IRWXG | S_IRWXO | S_IRWXU);
     assert(fd > 0);
     off_t offset;
     if((offset = lseek(fd, my->start, SEEK_SET)) < 0)
@@ -288,7 +290,8 @@ void client::thread_download()
 	 struct thread_package *Thread_package;
 	 Thread_package = new thread_package[thread_number];
 	 long int start = 0;
-	 if(assess(myfile_information.file_name_temp,F_OK) == 0)	//表明该文件已存在，assess函数作用是查看文件某一权限
+	 int ave_bit;
+	 if(access(myfile_information.file_name_temp,F_OK) == 0)	//表明该文件已存在，access函数作用是查看文件某一权限
 	 {
 		int fd = open(myfile_information.file_name_temp, O_CREAT | O_WRONLY, S_IRWXG | S_IRWXO | S_IRWXU); 
 		long int file_size = get_file_size(fd);
@@ -302,6 +305,7 @@ void client::thread_download()
 		 ave_bit = myfile_information.file_length / thread_number;
 	 }
     /*多线程下载*/
+	int i;
     for(i=0; i<thread_number; i++)
     {
         Thread_package[i].read_ret = 0;//该线程已经从sockfd读取的字节数目
@@ -312,7 +316,7 @@ void client::thread_download()
         Thread_package[i].end = start;//该线程读取文件内容的结束位置
         Thread_package[i].fqdn = fqdn;//该线程存取访问的fqdn
         Thread_package[i].url = address_buf;//该线程存取下载地址
-        strcpy(Thread_package[i].file_name, myfile_information.file_name_td);//该线程存取文件名称CIF文件，以判断是否为断点下载
+        strcpy(Thread_package[i].file_name, myfile_information.file_name_temp);//该线程存取文件名称CIF文件，以判断是否为断点下载
     }
     int Sum = 0;
     for(i=0; i<thread_number; i++)
@@ -332,9 +336,10 @@ void client::thread_download()
 			count += Thread_package[i].write_ret;
 		}
 		double percent = (double)count / (double)myfile_information.file_length;
-		while(percent < 1)
+		//while(percent < 1)
 		{
 			printf("%-10d%\r",percent*100);
+			usleep(10000);
 		}
         if(count == myfile_information.file_length)
         {
@@ -344,7 +349,7 @@ void client::thread_download()
 	}
     if(count != myfile_information.file_length)
     {
-        int r = remove(myfile_information.file_name_td);
+        int r = remove(myfile_information.file_name_temp);
         if(r == 0)
         {
             cout << "下载失败!\n";
@@ -352,7 +357,7 @@ void client::thread_download()
         exit(0);
     }
     else{
-        rename(myfile_information.file_name_td, myfile_information.file_name);
+        rename(myfile_information.file_name_temp, myfile_information.file_name);
         cout << "下载成功!\n";
     }	
 }
