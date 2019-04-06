@@ -312,7 +312,13 @@ void client::thread_download()
         Thread_package[i].write_ret = 0;//该线程已经写入文件的字节数目
         Thread_package[i].sockfd = -1;//该线程的socket
         Thread_package[i].start = start;//该线程读取文件内容的开始位置
-        start = start + ave_bit;
+		if(i == thread_number - 1)
+		{
+			start = start + ave_bit + myfile_information.file_length % thread_number;
+		}else
+		{
+			start = start + ave_bit;
+		}
         Thread_package[i].end = start;//该线程读取文件内容的结束位置
         Thread_package[i].fqdn = fqdn;//该线程存取访问的fqdn
         Thread_package[i].url = address_buf;//该线程存取下载地址
@@ -357,7 +363,7 @@ void client::thread_download()
         exit(0);
     }
     else{
-        rename(myfile_information.file_name_temp, myfile_information.file_name);
+        rename(myfile_information.file_name_temp, real_name);
         cout << "下载成功!\n";
     }	
 }

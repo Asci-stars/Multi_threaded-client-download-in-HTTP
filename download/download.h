@@ -57,6 +57,7 @@ private:
     int port;//端口号
     int thread_number;//开辟的线程数量
     char *address_buf;//存储URL地址
+	char *real_name;     //存储文件自定义名称
 	char *address;
     char *fqdn;//FQDN解析
     char http_request[1000];//http请求头填写
@@ -67,7 +68,7 @@ private:
     struct file_imformation myfile_information;//文件信息
     STATUS status;
 public:
-    client(int thread_num, char *addr) : thread_number(thread_num), address_buf(addr){
+    client(int thread_num, char *addr,char *name) : thread_number(thread_num), address_buf(addr),real_name(name){
         socket_fd = -1;
         port = 80;//默认端口为80
         fqdn = NULL;
